@@ -1,64 +1,371 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="si">
 <head>
-  <meta charset="UTF-8">
-  <title>Zen Japanese Relaxation</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>6 Square Tiles — Simple Cutter + Preview</title>
+
+  <!-- Cropper.js -->
+  <link  href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet"/>
   <style>
-    body {
-      background-color: #111;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
-      padding-top: 20%;
-    }
-    #ghostContainer {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: black;
-      z-index: 9999;
-    }
-    #ghostVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    :root{--bg:#0b1220;--panel:#0f1724;--text:#e6eef7;--muted:#9fb0c8;--accent:#2dd4bf}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system; background:var(--bg); color:var(--text); padding:12px}
+    h1{font-size:18px;margin:0 0 10px}
+    .top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+    input[type=file]{display:inline-block}
+    .btn{background:#0f1724;border:1px solid #203040;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#03201a;border-color:#0d8f76}
+    .stage{width:100%;max-width:920px;background:#071018;border-radius:12px;padding:10px;border:1px solid #153139;margin-bottom:10px}
+    img#preview{max-width:100%;display:block;max-height:60vh}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px; margin-top:10px}
+    .tile img{width:100%;height:auto;border-radius:8px;border:1px solid #17323a;cursor:zoom-in}
+    .note{color:var(--muted);font-size:13px;margin-top:6px}
+    a.download-link{padding:6px 8px;background:#0e1b20;border-radius:8px;color:var(--text);text-decoration:none;border:1px solid #17323a;font-weight:600;display:inline-block;margin-top:6px}
+    label.switch{display:inline-flex;align-items:center;gap:6px}
+    @media(max-width:600px){ .tiles{grid-template-columns:repeat(2,1fr)} }
+
+    /* Modal preview */
+    #tilePreviewModal{display:none;position:fixed;z-index:9999;background:rgba(0,0,0,0.9);top:0;left:0;width:100%;height:100%;align-items:center;justify-content:center;overflow:hidden}
+    #tilePreviewInner{position:relative;max-width:96%;max-height:96%;display:flex;align-items:center;justify-content:center}
+    #tilePreviewImg{max-width:none;max-height:none;will-change:transform;touch-action:none;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+    .preview-close{position:absolute;top:14px;right:14px;background:#2dd4bf;border:none;color:#03201a;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700}
+    .preview-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:13px;background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:8px}
   </style>
 </head>
 <body>
-  <h1>🧘‍♂️ Japanese Zen Relaxation</h1>
-  <p>Take a deep breath... Calm your soul... 🌸</p>
-  <button id="startBtn">Start Relaxation</button>
-
-  <div id="ghostContainer">
-    <video id="ghostVideo" autoplay muted playsinline>
-      <source src="https://cdn.pixabay.com/video/2023/06/19/172563-832851487_large.mp4" type="video/mp4">
-    </video>
-    <audio id="screamAudio">
-      <source src="https://www.soundjay.com/human/sounds/scream-01.mp3" type="audio/mpeg">
-    </audio>
+  <h1>WhatsApp Product: 6 Square Tiles (3×2) — Preview</h1>
+  <div class="top">
+    <input id="file" type="file" accept="image/*" />
+    <button id="start" class="btn primary" disabled>Load & Start</button>
+    <button id="reset" class="btn" disabled>Reset</button>
+    <label class="switch"><input id="showGrid" type="checkbox" /> Show grid</label>
   </div>
 
+  <div class="stage">
+    <div id="imgWrap" style="display:flex;justify-content:center;align-items:center;position:relative;">
+      <img id="preview" alt="Load an image first" />
+    </div>
+    <div class="note">Crop box locked to <strong>3 : 2</strong> (width : height). That area will be split into 6 squares (3 columns × 2 rows).</div>
+  </div>
+
+  <div class="controls">
+    <button id="cropSplit" class="btn" disabled>Make 6 Tiles</button>
+    <button id="downloadAll" class="btn" disabled>Download All (separate)</button>
+    <a id="singleDownload" class="download-link" style="display:none">Download tile</a>
+  </div>
+
+  <div id="tiles" class="tiles"></div>
+
+  <!-- Modal for tile preview -->
+  <div id="tilePreviewModal" role="dialog" aria-hidden="true">
+    <div id="tilePreviewInner">
+      <img id="tilePreviewImg" src="" alt="Tile preview" />
+      <button id="closePreview" class="preview-close">Close</button>
+      <div class="preview-hint">Pinch or wheel to zoom, drag to move, double-click to reset</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script>
-    const startBtn = document.getElementById('startBtn');
-    const ghostContainer = document.getElementById('ghostContainer');
-    const ghostVideo = document.getElementById('ghostVideo');
-    const screamAudio = document.getElementById('screamAudio');
+    const fileEl = document.getElementById('file');
+    const startBtn = document.getElementById('start');
+    const resetBtn = document.getElementById('reset');
+    const preview = document.getElementById('preview');
+    const cropSplitBtn = document.getElementById('cropSplit');
+    const downloadAllBtn = document.getElementById('downloadAll');
+    const tilesWrap = document.getElementById('tiles');
+    const singleDL = document.getElementById('singleDownload');
+    const showGrid = document.getElementById('showGrid');
+
+    const modal = document.getElementById('tilePreviewModal');
+    const modalImg = document.getElementById('tilePreviewImg');
+    const closeBtn = document.getElementById('closePreview');
+
+    let cropper = null;
+    let currentFileName = 'image';
+
+    fileEl.addEventListener('change', () => {
+      startBtn.disabled = !fileEl.files.length;
+    });
 
     startBtn.addEventListener('click', () => {
-      startBtn.style.display = 'none';
+      const f = fileEl.files && fileEl.files[0];
+      if (!f) return;
+      currentFileName = (f.name || 'image').replace(/\.[^.]+$/, '');
+      const url = URL.createObjectURL(f);
+      preview.src = url;
+      preview.onload = () => {
+        initCropper(); URL.revokeObjectURL(url);
+        startBtn.disabled = true;
+        resetBtn.disabled = false;
+        cropSplitBtn.disabled = false;
+      };
+    });
 
-      // Wait 10 seconds then show ghost
-      setTimeout(() => {
-        ghostContainer.style.display = 'block';
-        ghostVideo.muted = false; // unmute for effect
-        ghostVideo.play();
-        screamAudio.play();
-      }, 10000);
+    function initCropper(){
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(preview, {
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 0.9,
+        aspectRatio: 3/2,
+        movable: true,
+        zoomable: true,
+        rotatable: true,
+        scalable: true,
+        responsive: true,
+        cropBoxResizable: true,
+        ready(){
+          if (showGrid.checked) drawGridOverlay();
+        },
+        crop(){ if (showGrid.checked) drawGridOverlay(); }
+      });
+    }
+
+    resetBtn.addEventListener('click', ()=>{
+      if (cropper) cropper.reset();
+      tilesWrap.innerHTML = '';
+      downloadAllBtn.disabled = true;
+      singleDL.style.display = 'none';
+      clearGridOverlay();
+    });
+
+    showGrid.addEventListener('change', ()=>{
+      if (cropper) {
+        if (showGrid.checked) drawGridOverlay(); else clearGridOverlay();
+      }
+    });
+
+    function drawGridOverlay(){
+      clearGridOverlay();
+      const box = cropper.getCropBoxData();
+      const canvas = document.createElement('canvas');
+      canvas.id = 'gridOverlay';
+      canvas.style.position = 'absolute';
+      canvas.style.left = Math.round(box.left) + 'px';
+      canvas.style.top = Math.round(box.top) + 'px';
+      canvas.width = Math.round(box.width);
+      canvas.height = Math.round(box.height);
+      canvas.style.pointerEvents = 'none';
+      canvas.style.borderRadius = '6px';
+      const wrap = preview.parentElement;
+      wrap.style.position = 'relative';
+      wrap.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 1;
+      const w = canvas.width, h = canvas.height;
+      ctx.beginPath();
+      ctx.moveTo(w/3, 0); ctx.lineTo(w/3, h);
+      ctx.moveTo(2*w/3, 0); ctx.lineTo(2*w/3, h);
+      ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+      ctx.stroke();
+    }
+    function clearGridOverlay(){
+      const g = document.getElementById('gridOverlay');
+      if (g && g.parentNode) g.parentNode.removeChild(g);
+    }
+
+    cropSplitBtn.addEventListener('click', async ()=>{
+      if (!cropper) return;
+      tilesWrap.innerHTML = '';
+      clearGridOverlay();
+      const data = cropper.getData(true); // {x,y,width,height} in image pixels
+      const sx = Math.round(data.x);
+      const sy = Math.round(data.y);
+      const sw = Math.round(data.width);
+      const sh = Math.round(data.height);
+      const tileW = Math.floor(sw / 3);
+      const tileH = Math.floor(sh / 2);
+      const tileSize = Math.min(tileW, tileH);
+
+      // create 6 canvases (row 0..1, col 0..2)
+      const outUrls = [];
+      for (let row=0; row<2; row++){
+        for (let col=0; col<3; col++){
+          const sxTile = sx + col * tileSize;
+          const syTile = sy + row * tileSize;
+          const canvas = document.createElement('canvas');
+          canvas.width = tileSize;
+          canvas.height = tileSize;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          // draw from the original image element (which has naturalSize)
+          ctx.drawImage(preview, sxTile, syTile, tileSize, tileSize, 0, 0, tileSize, tileSize);
+          const url = canvas.toDataURL('image/png');
+          outUrls.push({url, w:tileSize, h:tileSize});
+          const wrap = document.createElement('div');
+          wrap.className = 'tile';
+          const img = document.createElement('img');
+          img.src = url;
+          img.alt = `tile-${row}-${col}`;
+          wrap.appendChild(img);
+          const a = document.createElement('a');
+          a.textContent = 'Download';
+          a.href = url;
+          a.download = `${currentFileName}_tile_${row}_${col}.png`;
+          a.className = 'download-link';
+          wrap.appendChild(a);
+          tilesWrap.appendChild(wrap);
+
+          // add click-to-preview that opens modal
+          img.addEventListener('click', ()=> openPreview(url));
+        }
+      }
+      downloadAllBtn.disabled = false;
+      singleDL.style.display = 'none';
+      setTimeout(()=>{ tilesWrap.scrollIntoView({behavior:'smooth'}); }, 120);
+    });
+
+    // download all sequentially
+    downloadAllBtn.addEventListener('click', ()=>{
+      const links = tilesWrap.querySelectorAll('a.download-link');
+      if (!links.length) return;
+      let i = 0;
+      function clickNext(){
+        if (i>=links.length) return;
+        links[i].click();
+        i++;
+        setTimeout(clickNext, 300);
+      }
+      clickNext();
+    });
+
+    // -----------------------
+    // Modal preview with zoom & pan (mouse + touch)
+    // -----------------------
+    let mState = {scale:1, tx:0, ty:0, startX:0, startY:0, dragging:false, lastTouch:null, pinchStart:null};
+    function openPreview(src){
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden','false');
+      modalImg.src = src;
+      // reset transform
+      mState.scale = 1; mState.tx = 0; mState.ty = 0;
+      applyTransform();
+    }
+    function closePreview(){
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden','true');
+      // release any pointers
+      mState.dragging = false;
+      mState.pinchStart = null;
+    }
+    closeBtn.addEventListener('click', closePreview);
+    modal.addEventListener('click', (e)=>{
+      if (e.target === modal) closePreview();
+    });
+
+    // Pointer dragging (mouse & pen)
+    modalImg.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      modalImg.setPointerCapture(e.pointerId);
+      mState.dragging = true;
+      mState.startX = e.clientX - mState.tx;
+      mState.startY = e.clientY - mState.ty;
+    });
+    modalImg.addEventListener('pointermove', (e)=>{
+      if (!mState.dragging) return;
+      mState.tx = e.clientX - mState.startX;
+      mState.ty = e.clientY - mState.startY;
+      applyTransform();
+    });
+    modalImg.addEventListener('pointerup', (e)=>{
+      mState.dragging = false;
+      try { modalImg.releasePointerCapture(e.pointerId); } catch(e){}
+    });
+    modalImg.addEventListener('pointercancel', ()=> mState.dragging = false);
+
+    // Wheel zoom (mouse)
+    modalImg.addEventListener('wheel', (e)=>{
+      e.preventDefault();
+      const rect = modalImg.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const delta = e.deltaY < 0 ? 1.12 : 0.88;
+      zoomAt(delta, cx, cy);
+    }, {passive:false});
+
+    function zoomAt(factor, focalX, focalY){
+      const prevScale = mState.scale;
+      let next = mState.scale * factor;
+      next = Math.max(0.5, Math.min(6, next));
+      // compute image point under focal
+      const imgRect = modalImg.getBoundingClientRect();
+      const imgX = (focalX - mState.tx) / prevScale;
+      const imgY = (focalY - mState.ty) / prevScale;
+      // new translation so focal point remains under cursor
+      mState.scale = next;
+      mState.tx = focalX - imgX * next;
+      mState.ty = focalY - imgY * next;
+      applyTransform();
+    }
+
+    function applyTransform(){
+      modalImg.style.transform = `translate(${mState.tx}px, ${mState.ty}px) scale(${mState.scale})`;
+    }
+
+    // Double click to reset
+    modalImg.addEventListener('dblclick', (e)=>{
+      mState.scale = 1; mState.tx = 0; mState.ty = 0; applyTransform();
+    });
+
+    // Touch pinch to zoom
+    modalImg.addEventListener('touchstart', (e)=>{
+      if (e.touches.length === 2){
+        const a = e.touches[0], b = e.touches[1];
+        mState.pinchStart = {
+          d: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY),
+          scale: mState.scale,
+          centerX: (a.clientX + b.clientX)/2,
+          centerY: (a.clientY + b.clientY)/2
+        };
+      } else if (e.touches.length === 1){
+        // single touch pan start
+        const t = e.touches[0];
+        mState.lastTouch = {x: t.clientX - mState.tx, y: t.clientY - mState.ty};
+      }
+    }, {passive:false});
+
+    modalImg.addEventListener('touchmove', (e)=>{
+      if (e.touches.length === 2 && mState.pinchStart){
+        const a = e.touches[0], b = e.touches[1];
+        const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+        const factor = d / mState.pinchStart.d;
+        const nextScale = Math.max(0.5, Math.min(6, mState.pinchStart.scale * factor));
+        // maintain center
+        const cx = (a.clientX + b.clientX)/2 - modalImg.getBoundingClientRect().left;
+        const cy = (a.clientY + b.clientY)/2 - modalImg.getBoundingClientRect().top;
+        zoomAt(nextScale / mState.scale, cx, cy);
+        e.preventDefault();
+      } else if (e.touches.length === 1 && mState.lastTouch){
+        const t = e.touches[0];
+        mState.tx = t.clientX - mState.lastTouch.x;
+        mState.ty = t.clientY - mState.lastTouch.y;
+        applyTransform();
+      }
+    }, {passive:false});
+
+    modalImg.addEventListener('touchend', (e)=>{
+      if (e.touches.length < 2) mState.pinchStart = null;
+      if (e.touches.length === 0) mState.lastTouch = null;
+    });
+
+    // Prevent background scroll while modal open
+    const obs = new MutationObserver(()=> {
+      if (modal.style.display === 'flex') document.body.style.overflow = 'hidden';
+      else document.body.style.overflow = '';
+    });
+    obs.observe(modal, {attributes:true, attributeFilter:['style']});
+
+    // Clean up when leaving / new file
+    window.addEventListener('beforeunload', ()=>{ if (cropper) cropper.destroy(); });
+
+    // Helpful: double click preview image to auto-fit crop box
+    preview.addEventListener('dblclick', ()=>{
+      if (cropper) cropper.crop();
     });
   </script>
 </body>
