@@ -1,43 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Spy King Personal Experiment</title>
-<style>
-body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #111; color: #fff; }
-.fakeCamera { width: 320px; height: 240px; background: #333; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
-button { padding: 10px 20px; margin-top: 20px; background: linear-gradient(to right, #ff0044, #ff77aa); color: #fff; border: none; border-radius: 8px; cursor: pointer; }
-</style>
-</head>
-<body>
-<h1>Spy King Personal Experiment</h1>
-<div class="fakeCamera">Camera Feed</div>
-<p id="status">Initializing...</p>
-<button id="startBtn">Start Capture & Send</button>
-
-<script>
-document.getElementById('startBtn').addEventListener('click', async () => {
-    document.getElementById('status').innerText = "Requesting camera permission...";
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        document.getElementById('status').innerText = "Camera permission granted. Capturing images...";
-
-        for (let i = 1; i <= 6; i++) {
-            await new Promise(r => setTimeout(r, 1000));
-            document.getElementById('status').innerText = `Captured image ${i}/6. Sending to Telegram...`;
-            console.log(`Image ${i} captured (simulation)`); 
-
-            // Call Node.js backend to capture & send real image
-            await fetch(`/capture`, { method: 'POST' });
-        }
-
-        document.getElementById('status').innerText = "All 6 images captured & sent!";
-        stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-        console.error(err);
-        document.getElementById('status').innerText = "Camera access denied or error!";
-    }
-});
-</script>
-</body>
-</html>
+<iframe src="https://player.vimeo.com/video/996457709" 
+        width="640" 
+        height="360" 
+        frameborder="0" 
+        allow="autoplay; fullscreen; picture-in-picture" 
+        allowfullscreen>
+</iframe>
