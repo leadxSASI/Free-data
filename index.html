@@ -1,7 +1,81 @@
-<iframe src="https://player.vimeo.com/video/996457709" 
-        width="640" 
-        height="360" 
-        frameborder="0" 
-        allow="autoplay; fullscreen; picture-in-picture" 
-        allowfullscreen>
-</iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZIP Password Brute Force</title>
+</head>
+<body>
+  <h2>ZIP Password Brute Force (with Web Worker)</h2>
+
+  <input type="file" id="zipFile" accept=".zip" /><br/><br/>
+
+  <label>Trying Password: </label>
+  <input type="text" id="passwordField" readonly style="width: 200px; font-weight: bold; font-size: 16px;" /><br/><br/>
+
+  <button id="startBtn">Start Brute Force</button>
+
+  <p id="status">Status: Idle</p>
+
+  <script src="https://gildas-lormeau.github.io/zip.js/demos/zip.min.js"></script>
+  <script>
+    const charset = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const maxLen = 3;
+
+    let file;
+    let worker;
+
+    const zipFileInput = document.getElementById('zipFile');
+    const startBtn = document.getElementById('startBtn');
+    const status = document.getElementById('status');
+    const passwordField = document.getElementById('passwordField');
+
+    zipFileInput.addEventListener('change', (e) => {
+      file = e.target.files[0];
+    });
+
+    startBtn.addEventListener('click', () => {
+      if (!file) {
+        alert('Please select a ZIP file first.');
+        return;
+      }
+
+      startBtn.disabled = true;
+      status.innerText = 'Starting brute force...';
+      passwordField.value = '';
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const arrayBuffer = event.target.result;
+
+        if (worker) worker.terminate();
+        worker = new Worker('worker.js');
+
+        worker.postMessage({
+          fileBuffer: arrayBuffer,
+          charset: charset,
+          maxLen: maxLen
+        }, [arrayBuffer]);
+
+        worker.onmessage = function(e) {
+          const data = e.data;
+          if (data.type === 'progress') {
+            passwordField.value = data.password;
+            status.innerText = `Trying password: ${data.password}`;
+          } else if (data.type === 'found') {
+            passwordField.value = data.password;
+            status.innerText = `✅ Password found: ${data.password}`;
+            startBtn.disabled = false;
+            worker.terminate();
+          } else if (data.type === 'notfound') {
+            status.innerText = '❌ Password not found.';
+            startBtn.disabled = false;
+            worker.terminate();
+          }
+        };
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  </script>
+</body>
+</html>
